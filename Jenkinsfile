@@ -1,0 +1,27 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: '4009e931-ec7b-46fc-87fb-36c528f1c27a', url: 'https://github.com/muthyalavinuthna/portfolio-project.git']])
+            }
+        }
+        stage('Archive Artifact') {
+            steps {
+                archiveArtifacts artifacts: 'src/**', fingerprint: true
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t portfolio-image .'
+            }
+        }
+        stage('Run Container') {
+            steps {
+                sh 'docker stop portfolio-container || true'
+                sh 'docker rm portfolio-container || true'
+                sh 'docker run -d -p 4000:80 --name portfolio-container portfolio-image'
+            }
+        }
+    }
+}
